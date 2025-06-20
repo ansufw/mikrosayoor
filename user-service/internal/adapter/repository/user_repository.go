@@ -21,7 +21,7 @@ type userRepository struct {
 func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error) {
 	modelUser := model.User{}
 
-	if err := u.db.Where("email = ? && is_verified", email, true).
+	if err := u.db.Where("email = ? AND is_verified = ?", email, true).
 		Preload("Roles").First(&modelUser).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
