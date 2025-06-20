@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:  
+
+  db:
+    container_name: pg_container
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: sayoor
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5400:5432"
+    volumes:
+      - ./datadb:/var/lib/postgresql/data/pgdata
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq_container
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management dashboard port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest # Default user
+      RABBITMQ_DEFAULT_PASS: guest # Default password
+    restart: always
+
+  elasticsearch:
+    image: elasticsearch:7.17.28
+    container_name: elasticsearch_container
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200" # HTTP port
+      - "9300:9300" # Transport port
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379" # Redis default port
+    restart: always
