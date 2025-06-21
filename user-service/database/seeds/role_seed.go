@@ -1,10 +1,10 @@
 package seeds
 
 import (
-	"log"
-	"user-service/internal/core/domain/model"
-
+	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
+
+	"user-service/internal/core/domain/model"
 )
 
 func SeedRole(db *gorm.DB) {

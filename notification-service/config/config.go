@@ -5,11 +5,6 @@ import "github.com/spf13/viper"
 type App struct {
 	AppPort string `json:"app_port"`
 	AppEnv  string `json:"app_env"`
-
-	JwtSecretKey string `json:"jwt_secret_key"`
-	JwtIssuer    string `json:"jwt_issuer"`
-
-	UrlForgotPassword string `json:"url_forgot_password"`
 }
 
 type PgsqlDB struct {
@@ -29,20 +24,27 @@ type RabbitMQ struct {
 	Password string `json:"password"`
 }
 
+type EmailConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Sending  string `json:"sending"`
+	IsTLS    bool   `json:"is_tls"`
+}
+
 type Config struct {
-	App      App      `json:"app"`
-	Psql     PgsqlDB  `json:"psql"`
-	RabbitMQ RabbitMQ `json:"rabbitmq"`
+	App      App         `json:"app"`
+	Psql     PgsqlDB     `json:"psql"`
+	RabbitMQ RabbitMQ    `json:"rabbitmq"`
+	Email    EmailConfig `json:"email"`
 }
 
 func NewConfig() *Config {
 	return &Config{
 		App: App{
-			AppPort:           viper.GetString("APP_PORT"),
-			AppEnv:            viper.GetString("APP_ENV"),
-			JwtSecretKey:      viper.GetString("JWT_SECRET_KEY"),
-			JwtIssuer:         viper.GetString("JWT_ISSUER"),
-			UrlForgotPassword: viper.GetString("URL_FORGOT_PASSWORD"),
+			AppPort: viper.GetString("APP_PORT"),
+			AppEnv:  viper.GetString("APP_ENV"),
 		}, // Asumsi struct App tidak memiliki field yang perlu diinisialisasi di sini
 		Psql: PgsqlDB{
 			Host:      viper.GetString("DATABASE_HOST"),
@@ -58,6 +60,14 @@ func NewConfig() *Config {
 			Port:     viper.GetString("RABBITMQ_PORT"),
 			User:     viper.GetString("RABBITMQ_USER"),
 			Password: viper.GetString("RABBITMQ_PASSWORD"),
+		},
+		Email: EmailConfig{
+			Host:     viper.GetString("EMAIL_HOST"),
+			Port:     viper.GetInt("EMAIL_PORT"),
+			Username: viper.GetString("EMAIL_USERNAME"),
+			Password: viper.GetString("EMAIL_PASSWORD"),
+			Sending:  viper.GetString("EMAIL_RECEIVER"),
+			IsTLS:    false,
 		},
 	}
 }

@@ -1,11 +1,11 @@
 package seeds
 
 import (
-	"log"
+	"github.com/labstack/gommon/log"
+	"gorm.io/gorm"
+
 	"user-service/internal/core/domain/model"
 	"user-service/utils/conv"
-
-	"gorm.io/gorm"
 )
 
 func SeedAdmin(db *gorm.DB) {
@@ -14,7 +14,7 @@ func SeedAdmin(db *gorm.DB) {
 		log.Fatalf("%s: %v", err.Error(), err)
 	}
 
-	modelRole := model.Role{}
+	modelRole := &model.Role{}
 	if err := db.Where("name = ?", "Super Admin").First(&modelRole).Error; err != nil {
 		log.Fatalf("%s: %v", err.Error(), err)
 	}
@@ -24,7 +24,7 @@ func SeedAdmin(db *gorm.DB) {
 		Email:      "superadmin@mail.com",
 		Password:   string(bytes),
 		IsVerified: true,
-		Roles:      []*model.Role{&modelRole},
+		Roles:      []*model.Role{modelRole},
 	}
 
 	if err := db.FirstOrCreate(&admin, model.User{Email: admin.Email}).Error; err != nil {

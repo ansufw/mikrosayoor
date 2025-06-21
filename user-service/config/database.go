@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	"user-service/database/seeds"
 
-	"github.com/rs/zerolog/log"
+	"github.com/labstack/gommon/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"user-service/database/seeds"
 )
 
 type Postgres struct {
@@ -24,13 +25,13 @@ func (cfg Config) ConnectionPostgres() (*Postgres, error) {
 
 	db, err := gorm.Open(postgres.Open(dbConnString), &gorm.Config{})
 	if err != nil {
-		log.Error().Err(err).Msg("ConnectionPostgres-1 Failed to connect to database " + cfg.Psql.Host)
+		log.Errorf("ConnectionPostgres-1 Failed to connect to database " + cfg.Psql.Host)
 		return nil, err
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Error().Err(err).Msg("ConnectionPostgres-2 Failed to get database connection")
+		log.Error("ConnectionPostgres-2 Failed to get database connection")
 		return nil, err
 	}
 
