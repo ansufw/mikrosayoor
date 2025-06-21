@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+	"user-service/config"
+	"user-service/internal/adapter"
 	"user-service/internal/adapter/handler/request"
 	"user-service/internal/adapter/handler/response"
 	"user-service/internal/core/domain/entity"
@@ -80,14 +82,19 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface) UserHandlerInterface {
+func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg *config.Config) UserHandlerInterface {
 	userHandler := &userHandler{
 		userService: userService,
 	}
 
 	e.Use(middleware.Recover())
-
 	e.POST("/signin", userHandler.SignIn)
+
+	mid := adapter.NewMiddlewareAdapter(cfg)
+	adminGroup := e.Group("/admin", mid.CheckToken())
+	adminGroup.GET("/check", func(c echo.Context) error {
+		return c.String(200, "ok")
+	})
 
 	return userHandler
 
