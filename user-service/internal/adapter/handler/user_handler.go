@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -19,10 +20,127 @@ type UserHandlerInterface interface {
 	SignIn(c echo.Context) error
 	CreateUserAccount(c echo.Context) error
 	ForgotPassword(c echo.Context) error
+	VerifyAccount(c echo.Context) error
+	UpdatePassword(c echo.Context) error
 }
 
 type userHandler struct {
 	userService service.UserServiceInterface
+}
+
+// UpdatePassword implements UserHandlerInterface.
+func (u *userHandler) UpdatePassword(c echo.Context) error {
+	var (
+		resp = response.DefaultResponse{}
+		req  = request.UpdatePasswordRequest{}
+		ctx  = c.Request().Context()
+	)
+
+	tokenString := c.QueryParam("token")
+	if tokenString == "" {
+		err := errors.New("missing or invalid token")
+		log.Infof("[UserHandler-1] UpdatePassword: %s", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusUnauthorized, resp)
+	}
+
+	if err := c.Bind(&req); err != nil {
+		log.Errorf("[UserHandler-2] UpdatePassword: %v", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	if err := c.Validate(req); err != nil {
+		log.Errorf("[UserHandler-3] UpdatePassword: %v", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusUnprocessableEntity, resp)
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		log.Infof("[UserHandler-4] UpdatePassword: %v", "password not match")
+		resp.Message = "password not match"
+		resp.Data = nil
+		return c.JSON(http.StatusUnprocessableEntity, resp)
+	}
+
+	reqEntity := entity.UserEntity{
+		Password: req.NewPassword,
+		Token:    tokenString,
+	}
+
+	err = u.userService.UpdatePassword(ctx, reqEntity)
+	if err != nil {
+		log.Infof("[UserHandler-5] UpdatePassword: %s", err)
+		if err.Error() == "404" {
+			resp.Message, resp.Data = "user not found", nil
+			return c.JSON(http.StatusNotFound, resp)
+		}
+
+		if err.Error() == "401" {
+			resp.Message, resp.Data = "token expired or invalid", nil
+			return c.JSON(http.StatusUnauthorized, resp)
+		}
+
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// VerifyToken implements UserHandlerInterface.
+func (u *userHandler) VerifyAccount(c echo.Context) error {
+	var (
+		resp       = response.DefaultResponse{}
+		respSignIn = response.SignInResponse{}
+		ctx        = c.Request().Context()
+	)
+
+	tokenString := c.QueryParam("token")
+	if tokenString == "" {
+		err := errors.New("missing or invalid token")
+		log.Infof("[UserHandler-1] VerifyAccount: %s", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusUnauthorized, resp)
+	}
+
+	user, err := u.userService.VerifyToken(ctx, tokenString)
+	if err != nil {
+		log.Infof("[UserHandler-2] VerifyAccount: %s", err)
+		if err.Error() == "404" {
+			resp.Message, resp.Data = "user not found", nil
+			return c.JSON(http.StatusNotFound, resp)
+		}
+
+		if err.Error() == "401" {
+			resp.Message, resp.Data = "token expired or invalid", nil
+			return c.JSON(http.StatusUnauthorized, resp)
+		}
+
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	respSignIn.ID = user.ID
+	respSignIn.Name = user.Name
+	respSignIn.Email = user.Email
+	respSignIn.Role = user.RoleName
+	respSignIn.Phone = user.Phone
+	respSignIn.Lat = user.Lat
+	respSignIn.Lng = user.Lng
+	respSignIn.AccessToken = user.Token
+
+	resp.Message = "success"
+	resp.Data = respSignIn
+
+	return c.JSON(http.StatusOK, resp)
+
 }
 
 // ForgotPassword implements UserHandlerInterface.
@@ -182,6 +300,8 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 	e.POST("/signin", userHandler.SignIn)
 	e.POST("/signup", userHandler.CreateUserAccount)
 	e.POST("/forgot-password", userHandler.ForgotPassword)
+	e.GET("/verify-account", userHandler.VerifyAccount)
+	e.GET("/update-password", userHandler.UpdatePassword)
 
 	mid := adapter.NewMiddlewareAdapter(cfg)
 	adminGroup := e.Group("/admin", mid.CheckToken())
