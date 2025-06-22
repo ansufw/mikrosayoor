@@ -66,8 +66,8 @@ func NewConfig() *Config {
 			Port:     viper.GetInt("EMAIL_PORT"),
 			Username: viper.GetString("EMAIL_USERNAME"),
 			Password: viper.GetString("EMAIL_PASSWORD"),
-			Sending:  viper.GetString("EMAIL_RECEIVER"),
-			IsTLS:    false,
+			Sending:  viper.GetString("EMAIL_SENDING"),
+			IsTLS:    viper.GetBool("EMAIL_TLS"),
 		},
 	}
 }

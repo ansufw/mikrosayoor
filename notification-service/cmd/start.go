@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	// "user-service/internal/app"
-
 	"github.com/spf13/cobra"
+
+	"notification-service/internal/app"
 )
 
 var startCmd = &cobra.Command{
@@ -12,7 +12,7 @@ var startCmd = &cobra.Command{
 	Long:  "start",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Call Func Route API
-		// app.RunServer()
+		app.RunServer()
 	},
 }
 
