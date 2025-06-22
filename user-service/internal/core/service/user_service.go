@@ -20,6 +20,7 @@ type UserServiceInterface interface {
 	SignIn(ctx context.Context, req entity.UserEntity) (*entity.UserEntity, string, error)
 	CreateUserAccount(ctx context.Context, req entity.UserEntity) error
 	ForgotPassword(ctx context.Context, req entity.UserEntity) error
+	VerifyToken(ctx context.Context, token string) (*entity.UserEntity, error)
 }
 
 type userService struct {
@@ -27,6 +28,47 @@ type userService struct {
 	cfg        *config.Config
 	jwtService JwtServiceInterface
 	repoToken  repository.VerificationTokenRepositoryInterface
+}
+
+// VerifyToken implements UserServiceInterface.
+func (u *userService) VerifyToken(ctx context.Context, token string) (*entity.UserEntity, error) {
+	verifyToken, err := u.repoToken.GetDataByToken(ctx, token)
+	if err != nil {
+		log.Errorf("[UserService-1] VerifyToken: %v", err)
+		return nil, err
+	}
+
+	user, err := u.repo.UpdateUserVerified(ctx, verifyToken.UserID)
+	if err != nil {
+		log.Errorf("[UserService-2] VerifyToken: %v", err)
+		return nil, err
+	}
+
+	accessToken, err := u.jwtService.GenerateToken(user.ID)
+	if err != nil {
+		log.Errorf("[UserService-3] VerifyToken: %v", err)
+		return nil, err
+	}
+
+	sessionData := map[string]interface{}{
+		"user_id":    user.ID,
+		"email":      user.Email,
+		"name":       user.Name,
+		"logged_in":  true,
+		"created_at": time.Now().String(),
+		"token":      token,
+	}
+
+	redisConn := config.NewRedisClient()
+	err = redisConn.HSet(ctx, token, sessionData).Err()
+	if err != nil {
+		log.Errorf("[UserService-4] VerifyToken: %v", err)
+		return nil, err
+	}
+
+	user.Token = accessToken
+	return user, nil
+
 }
 
 // ForgotPassword implements UserServiceInterface.
