@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -22,10 +23,25 @@ type UserHandlerInterface interface {
 	ForgotPassword(c echo.Context) error
 	VerifyAccount(c echo.Context) error
 	UpdatePassword(c echo.Context) error
+	GetProfileUser(c echo.Context) error
 }
 
 type userHandler struct {
 	userService service.UserServiceInterface
+}
+
+// GetProfileUser implements UserHandlerInterface.
+func (u *userHandler) GetProfileUser(c echo.Context) error {
+	// var (
+	// 	resp = response.DefaultResponse{}
+	// 	req  = request.UpdatePasswordRequest{}
+	// 	ctx  = c.Request().Context()
+	// )
+
+	user := c.Get("user")
+	fmt.Println(user)
+
+	return nil
 }
 
 // UpdatePassword implements UserHandlerInterface.
@@ -305,6 +321,7 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 
 	mid := adapter.NewMiddlewareAdapter(cfg)
 	adminGroup := e.Group("/admin", mid.CheckToken())
+	adminGroup.GET("/profile", userHandler.GetProfileUser)
 	adminGroup.GET("/check", func(c echo.Context) error {
 		return c.String(200, "ok")
 	})

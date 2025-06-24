@@ -3,11 +3,13 @@ package adapter
 import (
 	"net/http"
 	"strings"
-	"user-service/config"
-	"user-service/internal/adapter/handler/response"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
+
+	"user-service/config"
+	"user-service/internal/adapter/handler/response"
+	"user-service/internal/core/service"
 )
 
 type MiddlewareAdapterInterface interface {
@@ -15,7 +17,8 @@ type MiddlewareAdapterInterface interface {
 }
 
 type middlewareAdapter struct {
-	cfg *config.Config
+	cfg        *config.Config
+	jwtService service.JwtServiceInterface
 }
 
 func (m *middlewareAdapter) CheckToken() echo.MiddlewareFunc {
@@ -32,6 +35,15 @@ func (m *middlewareAdapter) CheckToken() echo.MiddlewareFunc {
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+			_, err := m.jwtService.ValidateToken(tokenString)
+			if err != nil {
+				log.Errorf("[Middleware-2] error %s", err.Error())
+				respErr.Message = err.Error()
+				respErr.Data = nil
+				return echo.NewHTTPError(http.StatusUnauthorized, respErr)
+			}
+
 			getSession, err := redisConn.HGetAll(c.Request().Context(), tokenString).Result()
 			if err != nil || len(getSession) == 0 {
 				if err != nil {
@@ -51,8 +63,9 @@ func (m *middlewareAdapter) CheckToken() echo.MiddlewareFunc {
 	}
 }
 
-func NewMiddlewareAdapter(cfg *config.Config) MiddlewareAdapterInterface {
+func NewMiddlewareAdapter(cfg *config.Config, jwtService service.JwtServiceInterface) MiddlewareAdapterInterface {
 	return &middlewareAdapter{
-		cfg: cfg,
+		cfg:        cfg,
+		jwtService: jwtService,
 	}
 }
