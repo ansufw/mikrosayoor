@@ -1,0 +1,18 @@
+user:  # 30-6-2025, 20:24:41:266
+  request:
+    url: http://localhost:8080/admin/profile
+    method: GET
+    headers:
+      Content-Type: application/json
+  response:  # 35 ms
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      connection: close
+      content-length: '92'
+      content-type: application/json
+      date: Mon, 30 Jun 2025 18:24:41 GMT
+      vary: Origin
+    body: |
+      {"message":"WRONGTYPE Operation against a key holding the wrong kind of value","data":null}

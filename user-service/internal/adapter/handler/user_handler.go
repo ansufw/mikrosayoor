@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -32,16 +32,57 @@ type userHandler struct {
 
 // GetProfileUser implements UserHandlerInterface.
 func (u *userHandler) GetProfileUser(c echo.Context) error {
-	// var (
-	// 	resp = response.DefaultResponse{}
-	// 	req  = request.UpdatePasswordRequest{}
-	// 	ctx  = c.Request().Context()
-	// )
+	var (
+		resp        = response.DefaultResponse{}
+		respProfile = response.ProfileResponse{}
+		ctx         = c.Request().Context()
+		jwtUserData = entity.JwtUserData{}
+	)
 
-	user := c.Get("user")
-	fmt.Println(user)
+	user := c.Get("user").(string)
+	if user == "" {
+		log.Errorf("[UserHandler-1] GetProfileUser: %v", "data token not found")
+		resp.Message = "data token not found"
+		resp.Data = nil
+		return c.JSON(http.StatusNotFound, resp)
+	}
 
-	return nil
+	err := json.Unmarshal([]byte(user), &jwtUserData)
+	if err != nil {
+		log.Errorf("[UserHandler-2] GetProfileUser: %v", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	userID := jwtUserData.UserID
+
+	dataUser, err := u.userService.GetProfileUser(ctx, userID)
+	if err != nil {
+		log.Errorf("[UserHandler-3] GetProfileUser: %v", err)
+		if err.Error() == "404" {
+			resp.Message, resp.Data = "user not found", nil
+			return c.JSON(http.StatusNotFound, resp)
+		}
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	respProfile.Address = dataUser.Address
+	respProfile.Name = dataUser.Name
+	respProfile.Email = dataUser.Email
+	respProfile.ID = dataUser.ID
+	respProfile.Lat = dataUser.Lat
+	respProfile.Lng = dataUser.Lng
+	respProfile.Phone = dataUser.Phone
+	respProfile.Photo = dataUser.Photo
+	respProfile.RoleName = dataUser.RoleName
+
+	resp.Message = "success"
+	resp.Data = respProfile
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // UpdatePassword implements UserHandlerInterface.
@@ -258,14 +299,14 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	)
 
 	if err = c.Bind(&req); err != nil {
-		log.Errorf("[UserHandler-1] SignIn: %v", err)
+		log.Errorf("[UserHandler-1] SignIn: %v", err.Error())
 		resp.Message = err.Error()
 		resp.Data = nil
 		return c.JSON(http.StatusUnprocessableEntity, resp)
 	}
 
 	if err = c.Validate(req); err != nil {
-		log.Errorf("[UserHandler-2] SignIn: %v", err)
+		log.Errorf("[UserHandler-2] SignIn: %v", err.Error())
 		resp.Message = err.Error()
 		resp.Data = nil
 		return c.JSON(http.StatusUnprocessableEntity, resp)
@@ -280,7 +321,7 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	if err != nil {
 
 		if err.Error() == "404" {
-			log.Errorf("[UserHandler-3] SignIn: %v", err)
+			log.Errorf("[UserHandler-3] SignIn: %v", err.Error())
 			resp.Message = "user not found"
 			resp.Data = nil
 			return c.JSON(http.StatusNotFound, resp)
@@ -307,7 +348,7 @@ func (u *userHandler) SignIn(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg *config.Config) UserHandlerInterface {
+func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg *config.Config, jws service.JwtServiceInterface) UserHandlerInterface {
 	userHandler := &userHandler{
 		userService: userService,
 	}
@@ -319,7 +360,7 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 	e.GET("/verify-account", userHandler.VerifyAccount)
 	e.GET("/update-password", userHandler.UpdatePassword)
 
-	mid := adapter.NewMiddlewareAdapter(cfg)
+	mid := adapter.NewMiddlewareAdapter(cfg, jws)
 	adminGroup := e.Group("/admin", mid.CheckToken())
 	adminGroup.GET("/profile", userHandler.GetProfileUser)
 	adminGroup.GET("/check", func(c echo.Context) error {

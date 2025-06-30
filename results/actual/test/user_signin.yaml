@@ -1,0 +1,23 @@
+user_signin:  # 30-6-2025, 21:47:39:786
+  request:
+    url: http://localhost:8080/signin
+    method: POST
+    headers:
+      Content-Type: application/json
+    body: |-
+      {
+          "email": "superadmin@mail.com",
+          "password": "admin123"
+      }
+  response:  # 1719 ms
+    status:
+      code: 200
+      message: OK
+    headers:
+      connection: close
+      content-length: '287'
+      content-type: application/json
+      date: Mon, 30 Jun 2025 19:47:41 GMT
+      vary: Origin
+    body: |
+      {"message":"success","data":{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTEzOTkyNjEsImlzcyI6InNlY3JldCIsInVzZXJfaWQiOjF9.G4pjWhwBZmvdru4VI-hDnt27sGVS6XecrIH9KMGqoqM","role":"Super Admin","id":1,"name":"","email":"superadmin@mail.com","phone":"","lat":"","lng":""}}

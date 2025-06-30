@@ -1,0 +1,38 @@
+[
+  {
+    "name": "user_get_profile",
+    "test": "user_get_profile",
+    "type": "request",
+    "end": "2025-06-30T19:48:16.593Z",
+    "result": {
+      "status": "Submitted",
+      "message": "Request 'user_get_profile' SUBMITTED"
+    },
+    "request": {
+      "name": "user_get_profile",
+      "type": "request",
+      "url": "http://localhost:8080/admin/profile",
+      "method": "GET",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "submitted": "2025-06-30T19:48:16.502Z"
+    },
+    "response": {
+      "runId": "3e30db731feb",
+      "status": {
+        "code": 200,
+        "message": "OK"
+      },
+      "headers": {
+        "connection": "close",
+        "content-length": "163",
+        "content-type": "application/json",
+        "date": "Mon, 30 Jun 2025 19:48:16 GMT",
+        "vary": "Origin"
+      },
+      "body": "{\"message\":\"success\",\"data\":{\"role\":\"Super Admin\",\"id\":1,\"name\":\"super admin\",\"email\":\"superadmin@mail.com\",\"phone\":\"\",\"lat\":\"\",\"lng\":\"\",\"address\":\"\",\"photo\":\"\"}}\n",
+      "time": 49
+    }
+  }
+]

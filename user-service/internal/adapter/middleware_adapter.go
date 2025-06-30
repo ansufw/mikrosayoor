@@ -28,33 +28,33 @@ func (m *middlewareAdapter) CheckToken() echo.MiddlewareFunc {
 			redisConn := config.NewRedisClient()
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
-				log.Errorf("[Middleware-1] CheckToken missing or invalid token")
+				log.Errorf("[Middleware-1] missing or invalid token")
 				respErr.Message = "missing or invalid token"
 				respErr.Data = nil
-				return echo.NewHTTPError(http.StatusUnauthorized, respErr)
+				return c.JSON(http.StatusUnauthorized, respErr)
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 			_, err := m.jwtService.ValidateToken(tokenString)
 			if err != nil {
-				log.Errorf("[Middleware-2] error %s", err.Error())
+				log.Errorf("[Middleware-2] validate token %s", err.Error())
 				respErr.Message = err.Error()
 				respErr.Data = nil
-				return echo.NewHTTPError(http.StatusUnauthorized, respErr)
+				return c.JSON(http.StatusUnauthorized, respErr)
 			}
 
-			getSession, err := redisConn.HGetAll(c.Request().Context(), tokenString).Result()
+			getSession, err := redisConn.Get(c.Request().Context(), tokenString).Result()
 			if err != nil || len(getSession) == 0 {
 				if err != nil {
-					log.Errorf("[Middleware-2] error %s", err.Error())
+					log.Errorf("[Middleware-3] get session error %s", err.Error())
 					respErr.Message = err.Error()
 				} else {
-					log.Errorf("[Middleware-2] session missing")
+					log.Errorf("[Middleware-4] session missing")
 					respErr.Message = "session missing"
 				}
 				respErr.Data = nil
-				return echo.NewHTTPError(http.StatusUnauthorized, respErr)
+				return c.JSON(http.StatusUnauthorized, respErr)
 			}
 
 			c.Set("user", getSession)

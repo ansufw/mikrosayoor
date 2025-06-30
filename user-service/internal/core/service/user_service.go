@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -97,10 +98,16 @@ func (u *userService) VerifyToken(ctx context.Context, token string) (*entity.Us
 		"token":      token,
 	}
 
-	redisConn := config.NewRedisClient()
-	err = redisConn.HSet(ctx, token, sessionData).Err()
+	jsonData, err := json.Marshal(sessionData)
 	if err != nil {
-		log.Errorf("[UserService-4] VerifyToken: %v", err)
+		log.Errorf("[UserService-4] Marshal session data: %v", err)
+		return nil, err
+	}
+
+	redisConn := config.NewRedisClient()
+	err = redisConn.Set(ctx, token, jsonData, time.Hour*24).Err()
+	if err != nil {
+		log.Errorf("[UserService-5] Set session data: %v", err)
 		return nil, err
 	}
 
@@ -199,8 +206,14 @@ func (u *userService) SignIn(ctx context.Context, req entity.UserEntity) (*entit
 		"token":      token,
 	}
 
+	jsonData, err := json.Marshal(sessionData)
+	if err != nil {
+		log.Errorf("[UserService-4] SignIn: %v", err)
+		return nil, "", err
+	}
+
 	redisConn := config.NewRedisClient()
-	err = redisConn.HSet(ctx, token, sessionData).Err()
+	err = redisConn.Set(ctx, token, jsonData, time.Hour*24).Err()
 	if err != nil {
 		log.Errorf("[UserService-4] SignIn: %v", err)
 		return nil, "", err

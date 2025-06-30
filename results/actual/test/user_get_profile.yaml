@@ -1,0 +1,18 @@
+user_get_profile:  # 30-6-2025, 21:48:16:502
+  request:
+    url: http://localhost:8080/admin/profile
+    method: GET
+    headers:
+      Content-Type: application/json
+  response:  # 49 ms
+    status:
+      code: 200
+      message: OK
+    headers:
+      connection: close
+      content-length: '163'
+      content-type: application/json
+      date: Mon, 30 Jun 2025 19:48:16 GMT
+      vary: Origin
+    body: |
+      {"message":"success","data":{"role":"Super Admin","id":1,"name":"super admin","email":"superadmin@mail.com","phone":"","lat":"","lng":"","address":"","photo":""}}

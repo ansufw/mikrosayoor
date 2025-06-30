@@ -1,0 +1,43 @@
+attributes:
+  NodeStyle: BoxIcon
+  display: x=23,y=18,w=156,h=27
+steps:
+  - id: s1
+    name: Start
+    path: start
+    attributes:
+      display: x=60,y=110,w=60,h=40
+    links:
+      - id: l1
+        attributes:
+          display: type=Elbow,x=263,y=124,xs=124&402,ys=124&124
+        to: s2
+  - id: s2
+    name: Stop
+    path: stop
+    attributes:
+      display: x=406,y=97,w=60,h=40
+  - id: s3
+    name: user_signin Copy
+    path: request
+    links: []
+    attributes:
+      display: x=30,y=90,w=100,h=80
+      url: http://localhost:8080/signin
+      method: POST
+      headers: '[["Content-Type","application/json"]]'
+      body: |-
+        {
+            "email": "superadmin@mail.com",
+            "password": "admin123"
+        }
+  - id: s4
+    name: user_get_profile Copy
+    path: request
+    links: []
+    attributes:
+      display: x=380,y=90,w=100,h=80
+      url: http://localhost:8080/admin/profile
+      method: GET
+      headers: '[["Authorization","Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTEzODUzMjMsImlzcyI6InNlY3JldCIsInVzZXJfaWQiOjF9.tNlWcZEGalvbbqG9hlE1Y7S0tsku91RgHu1K_t1IxXQ"],["Content-Type","application/json"],["Auth","Bearer "]]'
+subflows: []
