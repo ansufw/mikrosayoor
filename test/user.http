@@ -1,0 +1,36 @@
+@assetsDir=./
+###
+POST http://localhost:8080/signin HTTP/1.1
+content-type: application/json
+
+{
+    "email": "superadmin@mail.com",
+    "password": "admin123"
+}
+
+HTTP/1.1 200  - OK
+content-type: application/json
+vary: Origin
+date: Tue, 01 Jul 2025 15:43:50 GMT
+content-length: 287
+connection: close
+###
+POST http://localhost:8080/auth/profile/image-upload HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTE0NzEwMzAsImlzcyI6InNlY3JldCIsInVzZXJfaWQiOjF9.-TAsaYJvRElzl1dVwGOANwzIvl-x1zfPBb2sn-Zzj1k
+Content-Type: multipart/form-data; boundary=WebKitFormBoundary
+
+photo_profile
+--WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="dolar.png"
+Content-Type: application/png
+
+< "/home/mw/Documenten/ansuf/sandbox/mikrosayoor/test/dolar.png"
+--WebKitFormBoundary--
+
+
+HTTP/1.1 422  - Unprocessable Entity
+content-type: application/json
+vary: Origin
+date: Tue, 01 Jul 2025 15:57:53 GMT
+content-length: 45
+connection: close

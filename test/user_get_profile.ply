@@ -1,6 +1,0 @@
-user_get_profile:
-  url: http://localhost:8080/admin/profile
-  method: GET
-  headers:
-    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTEzOTkyNjEsImlzcyI6InNlY3JldCIsInVzZXJfaWQiOjF9.G4pjWhwBZmvdru4VI-hDnt27sGVS6XecrIH9KMGqoqM
-    Content-Type: application/json
